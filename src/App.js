@@ -1,7 +1,9 @@
+import TransactionForm from "./Components/transactionForm";
+
 function App() {
   return (
     <div className="App">
-      <h1>Expense-Tracker</h1>
+      <TransactionForm />
     </div>
   );
 }
