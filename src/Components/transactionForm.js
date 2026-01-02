@@ -5,9 +5,25 @@ import TransactionList from "./transactionList";
 function TransactionForm() {
   const [transaction, setTransaction] = useState({ title: "", amount: 0 });
   const [trasactionData, setTransactionData] = useState([]);
+  const [balance, setBalance] = useState(0);
+  const [income, setIncome] = useState(0);
+  const [expense, setExpense] = useState(0);
 
   function handleSubmit(event) {
     event.preventDefault();
+
+    const newAmount = parseFloat(transaction.amount);
+    if (newAmount < 0 && balance + newAmount < 0) {
+      alert("You have not enough balance please add cash !!");
+      return;
+    }
+
+    setBalance((prev) => prev + newAmount);
+    if (newAmount > 0) {
+      setIncome((prev) => prev + newAmount);
+    } else {
+      setExpense((prev) => prev + Math.abs(newAmount));
+    }
 
     setTransactionData((prevData) => [
       { title: transaction.title, amount: transaction.amount },
@@ -54,7 +70,7 @@ function TransactionForm() {
         </form>
       </div>
       <div className="right-section">
-        <TransactionInfo trasactionData={trasactionData} />
+        <TransactionInfo balance={balance} income={income} expense={expense} />
         <TransactionList trasactionData={trasactionData} />
       </div>
     </>
