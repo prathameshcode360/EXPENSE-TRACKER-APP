@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import TransactionInfo from "./transactionInfo";
 import TransactionList from "./transactionList";
 import { db } from "../Firebase/firebaseInit";
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import { collection, addDoc, onSnapshot } from "firebase/firestore";
 
 function TransactionForm() {
   // State for current input transaction
@@ -21,16 +21,18 @@ function TransactionForm() {
 
   //Fetching transactions from firebase
   useEffect(() => {
-    async function fetchTransactions() {
-      const transactionCollection = await getDocs(
-        collection(db, "transactions")
-      );
-      const transactions = transactionCollection.docs.map((doc) => {
-        return { id: doc.id, ...doc.data() };
-      });
-      setTransactionData(transactions);
-    }
-    fetchTransactions();
+    const transactionListener = onSnapshot(
+      collection(db, "transactions"),
+      (snapshot) => {
+        const transactions = snapshot.docs.map((doc) => {
+          return { id: doc.id, ...doc.data() };
+        });
+        setTransactionData(transactions);
+      }
+    );
+    return () => {
+      transactionListener(); // Unsubscribe from the Listener on amount
+    };
   }, []);
 
   // HANDLE SUBMIT (ADD / UPDATE)
