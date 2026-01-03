@@ -2,139 +2,137 @@ import { useEffect, useState } from "react";
 import TransactionInfo from "./transactionInfo";
 import TransactionList from "./transactionList";
 import { db } from "../Firebase/firebaseInit";
-import { collection, addDoc, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  doc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+} from "firebase/firestore";
 
 function TransactionForm() {
-  // State for current input transaction
   const [transaction, setTransaction] = useState({ title: "", amount: 0 });
-
-  // State for all transactions
   const [transactionData, setTransactionData] = useState([]);
 
-  // Balance related states
   const [balance, setBalance] = useState(0);
   const [income, setIncome] = useState(0);
   const [expense, setExpense] = useState(0);
 
-  // Used to identify update mode
   const [updateIndex, setUpdateIndex] = useState(null);
 
-  //Fetching transactions from firebase
+  //  FIRESTORE SUMMARY UPDATE
+  async function updateSummary(balance, income, expense) {
+    const summaryRef = doc(db, "transactionInfo", "summary");
+    await setDoc(summaryRef, { balance, income, expense });
+  }
+
+  // / FETCH TRANSACTIONS (REAL TIME)
   useEffect(() => {
-    const transactionListener = onSnapshot(
-      collection(db, "transactions"),
-      (snapshot) => {
-        const transactions = snapshot.docs.map((doc) => {
-          return { id: doc.id, ...doc.data() };
-        });
-        setTransactionData(transactions);
-      }
-    );
-    return () => {
-      transactionListener(); // Unsubscribe from the Listener on amount
-    };
+    const unsub = onSnapshot(collection(db, "transactions"), (snapshot) => {
+      const transactions = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTransactionData(transactions);
+    });
+
+    return () => unsub();
   }, []);
 
-  // HANDLE SUBMIT (ADD / UPDATE)
+  //  FETCH SUMMARY (REAL TIME)
+  useEffect(() => {
+    const unsub = onSnapshot(
+      doc(db, "transactionInfo", "summary"),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const { balance, income, expense } = docSnap.data();
+          setBalance(balance);
+          setIncome(income);
+          setExpense(expense);
+        }
+      }
+    );
+
+    return () => unsub();
+  }, []);
+
+  //  ADD / UPDATE TRANSACTION
   async function handleSubmit(event) {
     event.preventDefault();
-
     const newAmount = Number(transaction.amount);
 
-    // -------- UPDATE TRANSACTION --------
+    //  UPDATE
     if (updateIndex !== null) {
-      const updated = [...transactionData];
-
-      const oldAmount = Number(updated[updateIndex].amount);
+      const oldTransaction = transactionData[updateIndex];
+      const oldAmount = Number(oldTransaction.amount);
       const diff = newAmount - oldAmount;
 
-      // Prevent negative balance after update
       if (balance + diff < 0) {
         alert("You cannot spend more than your income!!");
-        setTransaction({ title: "", amount: 0 });
         return;
       }
 
-      // Update transaction
-      updated[updateIndex] = { ...transaction };
-      setTransactionData(updated);
+      const updatedBalance = balance + diff;
+      let updatedIncome = income;
+      let updatedExpense = expense;
 
-      // Update balance using difference
-      setBalance((prev) => prev + diff);
+      if (oldAmount > 0) updatedIncome -= oldAmount;
+      else updatedExpense -= Math.abs(oldAmount);
 
-      // Remove old amount
-      if (oldAmount > 0) {
-        setIncome((prev) => prev - oldAmount);
-      } else {
-        setExpense((prev) => prev - Math.abs(oldAmount));
-      }
+      if (newAmount > 0) updatedIncome += newAmount;
+      else updatedExpense += Math.abs(newAmount);
 
-      // Add new amount
-      if (newAmount > 0) {
-        setIncome((prev) => prev + newAmount);
-      } else {
-        setExpense((prev) => prev + Math.abs(newAmount));
-      }
+      await updateDoc(doc(db, "transactions", oldTransaction.id), {
+        title: transaction.title,
+        amount: newAmount,
+      });
 
-      // Reset update mode
+      await updateSummary(updatedBalance, updatedIncome, updatedExpense);
+
       setUpdateIndex(null);
       setTransaction({ title: "", amount: 0 });
-    }
-
-    // ADD NEW TRANSACTION
-    else {
-      // Prevent negative balance
+    } else {
+      // ADD
       if (newAmount < 0 && balance + newAmount < 0) {
         alert("You have not enough balance please add cash !!");
         return;
       }
 
-      // Update balance
-      setBalance((prev) => prev + newAmount);
+      const updatedBalance = balance + newAmount;
+      let updatedIncome = income;
+      let updatedExpense = expense;
 
-      // Update income or expense
-      if (newAmount > 0) {
-        setIncome((prev) => prev + newAmount);
-      } else {
-        setExpense((prev) => prev + Math.abs(newAmount));
-      }
+      if (newAmount > 0) updatedIncome += newAmount;
+      else updatedExpense += Math.abs(newAmount);
 
-      // Add transaction to list
-      setTransactionData((prevData) => [
-        { title: transaction.title, amount: newAmount },
-        ...prevData,
-      ]);
-
-      // Reset input fields
-      setTransaction({ title: "", amount: 0 });
-
-      //add to firebase
       await addDoc(collection(db, "transactions"), {
         title: transaction.title,
-        amount: Number(transaction.amount),
+        amount: newAmount,
       });
+
+      await updateSummary(updatedBalance, updatedIncome, updatedExpense);
+
+      setTransaction({ title: "", amount: 0 });
     }
   }
 
-  // UPDATE TRANSACTION
+  //  UPDATE TRANSACTION
   function updateTransaction(index) {
-    const selectedTransaction = transactionData[index];
-
-    // Load selected transaction into input
+    const selected = transactionData[index];
     setTransaction({
-      title: selectedTransaction.title,
-      amount: selectedTransaction.amount,
+      title: selected.title,
+      amount: selected.amount,
     });
-
     setUpdateIndex(index);
   }
 
-  // DELETE TRANSACTION
-  function deleteTransaction(index) {
-    const toDeleteTransaction = transactionData[index];
-    const deleteAmount = Number(toDeleteTransaction.amount);
+  //  DELETE TRANSACTION
+  async function deleteTransaction(index) {
+    const toDelete = transactionData[index];
+    const deleteAmount = Number(toDelete.amount);
 
-    // Prevent negative balance after delete
     if (balance - deleteAmount < 0) {
       alert(
         "Cannot delete this transaction! It will result in negative balance."
@@ -142,19 +140,15 @@ function TransactionForm() {
       return;
     }
 
-    // Remove transaction
-    const updatedData = transactionData.filter((_, i) => i !== index);
-    setTransactionData(updatedData);
+    const updatedBalance = balance - deleteAmount;
+    let updatedIncome = income;
+    let updatedExpense = expense;
 
-    // Update balance
-    setBalance((prev) => prev - deleteAmount);
+    if (deleteAmount > 0) updatedIncome -= deleteAmount;
+    else updatedExpense -= Math.abs(deleteAmount);
 
-    // Update income or expense
-    if (deleteAmount > 0) {
-      setIncome((prev) => prev - deleteAmount);
-    } else {
-      setExpense((prev) => prev - Math.abs(deleteAmount));
-    }
+    await deleteDoc(doc(db, "transactions", toDelete.id));
+    await updateSummary(updatedBalance, updatedIncome, updatedExpense);
   }
 
   // UI
@@ -168,7 +162,6 @@ function TransactionForm() {
           <input
             type="text"
             id="title"
-            placeholder="Enter Title"
             required
             value={transaction.title}
             onChange={(e) =>
@@ -183,7 +176,6 @@ function TransactionForm() {
           <input
             type="number"
             id="amount"
-            placeholder="Enter Amount"
             required
             value={transaction.amount}
             onChange={(e) =>
