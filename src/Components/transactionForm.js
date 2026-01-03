@@ -1,6 +1,8 @@
 import { useState } from "react";
 import TransactionInfo from "./transactionInfo";
 import TransactionList from "./transactionList";
+import { db } from "../Firebase/firebaseInit";
+import { collection, addDoc } from "firebase/firestore";
 
 function TransactionForm() {
   // State for current input transaction
@@ -18,7 +20,7 @@ function TransactionForm() {
   const [updateIndex, setUpdateIndex] = useState(null);
 
   // HANDLE SUBMIT (ADD / UPDATE)
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     const newAmount = Number(transaction.amount);
@@ -89,6 +91,12 @@ function TransactionForm() {
 
       // Reset input fields
       setTransaction({ title: "", amount: 0 });
+
+      //add to firebase
+      await addDoc(collection(db, "transactions"), {
+        title: transaction.title,
+        amount: Number(transaction.amount),
+      });
     }
   }
 
