@@ -1,4 +1,4 @@
-/* ---------- GLOBAL ---------- */
+/* ===== GLOBAL RESET ===== */
 * {
   margin: 0;
   padding: 0;
@@ -7,157 +7,201 @@
 }
 
 body {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background: #f4f6f8;
+  padding: 20px;
 }
 
-/* ---------- APP CONTAINER ---------- */
+/* ===== APP LAYOUT ===== */
 .App {
+  max-width: 1100px;
+  margin: auto;
+  display: flex;
+  gap: 20px;
+}
+
+/* ===== LEFT SECTION (FORM) ===== */
+.left-section {
+  flex: 1;
   background: #ffffff;
-  width: 95%;
-  max-width: 900px;
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
-.App h2 {
+.left-section h2 {
+  margin-bottom: 15px;
   text-align: center;
-  margin-bottom: 20px;
   color: #333;
-}
-
-/* ---------- MAIN LAYOUT ---------- */
-.left-section,
-.right-section {
-  width: 100%;
-}
-
-@media (min-width: 768px) {
-  .App {
-    display: flex;
-    gap: 20px;
-  }
-
-  .left-section,
-  .right-section {
-    width: 50%;
-  }
-}
-
-/* ---------- FORM ---------- */
-.transaction-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 .transaction-form label {
+  display: block;
+  margin-top: 10px;
   font-weight: 600;
-  color: #444;
 }
 
 .transaction-form input {
+  width: 100%;
   padding: 10px;
-  border-radius: 6px;
+  margin-top: 6px;
+  border-radius: 8px;
   border: 1px solid #ccc;
-  outline: none;
-  transition: 0.3s;
 }
 
-.transaction-form input:focus {
-  border-color: #667eea;
+.transaction-form p {
+  margin: 8px 0;
+  font-size: 12px;
+  color: #666;
 }
 
 .transaction-form button {
-  margin-top: 10px;
+  width: 100%;
+  margin-top: 15px;
   padding: 12px;
-  background: #667eea;
+  background: #4f46e5;
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   font-size: 16px;
   cursor: pointer;
-  transition: 0.3s;
 }
 
 .transaction-form button:hover {
-  background: #5a6fdc;
+  background: #4338ca;
 }
 
-/* ---------- TRANSACTION INFO ---------- */
+/* ===== RIGHT SECTION ===== */
+.right-section {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ===== TRANSACTION INFO CARD ===== */
 .transaction-info {
-  margin-bottom: 20px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .balance h2 {
-  color: #333;
-  margin-bottom: 10px;
+  text-align: center;
+  margin-bottom: 15px;
 }
 
 .income-expense {
   display: flex;
   justify-content: space-between;
-  background: #f5f6fa;
-  padding: 15px;
-  border-radius: 8px;
 }
 
 .income,
 .Expense {
-  width: 45%;
+  width: 48%;
+  padding: 15px;
+  border-radius: 10px;
   text-align: center;
+  font-weight: bold;
 }
 
-.income h3 {
-  color: #2ecc71;
+.income {
+  background: #ecfdf5;
+  color: #047857;
 }
 
-.Expense h3 {
-  color: #e74c3c;
+.Expense {
+  background: #fef2f2;
+  color: #b91c1c;
 }
 
-/* ---------- TRANSACTION LIST ---------- */
+/* ===== TRANSACTION LIST CARD ===== */
 .transaction-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .transaction {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f9f9f9;
   padding: 12px;
-  border-radius: 8px;
-  border-left: 5px solid #667eea;
+  border-bottom: 1px solid #eee;
+}
+
+.transaction:last-child {
+  border-bottom: none;
 }
 
 .transaction h3 {
   font-size: 16px;
-  color: #333;
 }
 
 .transaction h4 {
-  color: #555;
+  font-weight: 600;
 }
 
-/* ---------- ACTION ICONS ---------- */
-.actions {
-  display: flex;
-  gap: 10px;
-}
-
+/* ===== ACTION ICONS ===== */
 .actions img {
   width: 22px;
+  margin-left: 10px;
   cursor: pointer;
-  transition: 0.2s;
 }
 
 .actions img:hover {
-  transform: scale(1.15);
+  transform: scale(1.1);
+}
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablets & Small Screens */
+@media (max-width: 900px) {
+  .App {
+    flex-direction: column;
+  }
+
+  .left-section,
+  .right-section {
+    width: 100%;
+  }
+
+  .right-section {
+    gap: 15px;
+  }
+}
+
+/* Mobile Devices */
+@media (max-width: 500px) {
+  body {
+    padding: 10px;
+  }
+
+  .left-section,
+  .transaction-info,
+  .transaction-list {
+    padding: 15px;
+  }
+
+  .income-expense {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .income,
+  .Expense {
+    width: 100%;
+  }
+
+  .transaction {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .actions {
+    align-self: flex-end;
+  }
 }

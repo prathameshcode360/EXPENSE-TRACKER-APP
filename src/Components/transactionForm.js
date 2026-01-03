@@ -185,7 +185,7 @@ function TransactionForm() {
               })
             }
           />
-
+          <p>while adding expense use "-" before amount</p>
           <button type="submit">
             {updateIndex !== null ? "Update" : "Add"}
           </button>
