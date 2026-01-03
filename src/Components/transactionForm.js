@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TransactionInfo from "./transactionInfo";
 import TransactionList from "./transactionList";
 import { db } from "../Firebase/firebaseInit";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 
 function TransactionForm() {
   // State for current input transaction
@@ -18,6 +18,20 @@ function TransactionForm() {
 
   // Used to identify update mode
   const [updateIndex, setUpdateIndex] = useState(null);
+
+  //Fetching transactions from firebase
+  useEffect(() => {
+    async function fetchTransactions() {
+      const transactionCollection = await getDocs(
+        collection(db, "transactions")
+      );
+      const transactions = transactionCollection.docs.map((doc) => {
+        return { id: doc.id, ...doc.data() };
+      });
+      setTransactionData(transactions);
+    }
+    fetchTransactions();
+  }, []);
 
   // HANDLE SUBMIT (ADD / UPDATE)
   async function handleSubmit(event) {
