@@ -165,7 +165,7 @@ function TransactionForm() {
             onChange={(e) =>
               setTransaction({
                 title: transaction.title,
-                amount: Number(e.target.value),
+                amount: e.target.value,
               })
             }
           />
