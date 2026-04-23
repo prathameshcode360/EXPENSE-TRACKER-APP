@@ -113,7 +113,7 @@ function TransactionForm() {
     // Prevent negative balance after delete
     if (balance - deleteAmount < 0) {
       alert(
-        "Cannot delete this transaction! It will result in negative balance."
+        "Cannot delete this transaction! It will result in negative balance.",
       );
       return;
     }
@@ -165,7 +165,7 @@ function TransactionForm() {
             onChange={(e) =>
               setTransaction({
                 title: transaction.title,
-                amount: Number(e.target.value),
+                amount: e.target.value,
               })
             }
           />
